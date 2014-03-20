@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="js/d3.v3.min.js"></script>
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link href="css/style.css" media="screen" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <h1>North Carolina League of Conservation Voters  <br><small>State Senate Scorecard Map</small></h1>
+    </div>
+    <div class="row">
+        <div id="main" class="col-md-9">
+            <div id="map"></div>
+        </div>
+        <div id="sidebar" class="col-md-3"></div>
+    </div>
+    <div class="row">
+        <div id="content"></div>
+    </div>
+</div><!-- /container -->
+
+
+<!--<script src="js/render-senate-map.js"></script>-->
+
+<script id="senate-template" type="text/x-handlebars-template">
+    <div class="entry">
+        <div class="body">
+            <strong>District {{{district}}}</strong><br>
+            {{{fullname}}} ({{{party}}})<br>
+            {{#if phone}}{{{phone}}}<br>{{/if}}
+            Counties: <em>{{{countiesrepresented}}}</em><br>
+            Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
+            2013 Score: <strong>{{{score2013}}}</strong><br>
+            {{{notes}}}<br>
+            {{#if twitter}}<a  target='_new' href="http://twitter.com/{{{twitter}}}"><i class="icon-twitter icon-2x custom-icon"></i></a>{{/if}} {{#if facebook}} <a  target='_new' href="{{{facebook}}}"><i class="icon-facebook icon-2x custom-icon"></i></a> {{/if}}{{#if emailaddress}}<a  target='_new' href="mailto:{{{emailaddress}}}"><i class="icon-envelope icon-2x custom-icon"></i></a>{{/if}}
+        </div>
+    </div>
+</script>
+
+<script id="senate-template-infobox" type="text/x-handlebars-template">
+    <div class="entry" style="padding-top:12px;">
+        <div class="body">
+            <button type='button' id='close' class='close'>x</button><br>
+
+            <strong>                {{{fullname}}} ({{{party}}})</strong><br>
+            District {{{district}}}<br>
+            {{#if phone}}{{{phone}}}<br>{{/if}}
+            Counties: <em>{{{countiesrepresented}}}</em><br>
+            Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
+            2013 Score: <strong>{{{score2013}}}</strong><br>
+            {{{notes}}}<br>
+            {{#if twitter}}<a  target='_new' href="http://twitter.com/{{{twitter}}}"><i class="icon-twitter icon-2x custom-icon"></i></a>{{/if}} {{#if facebook}} <a  target='_new' href="{{{facebook}}}"><i class="icon-facebook icon-2x custom-icon"></i></a> {{/if}}{{#if emailaddress}}<a  target='_new' href="mailto:{{{emailaddress}}}"><i class="icon-envelope icon-2x custom-icon"></i></a>{{/if}}
+        </div>
+    </div>
+</script>
+
+<!-- Don't need jQuery for Tabletop, but using it for this example -->
+<script type="text/javascript" src="js/handlebars.js"></script>
+<script type="text/javascript" src="js/jquery.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+<script type="text/javascript" src="js/tabletop.js"></script>
+<script type="text/javascript">
+    var public_spreadsheet_url = 'https://docs.google.com/spreadsheet/pub?key=0Ao3Ts9D8bHHpdHRWYmRIYldKcFBFVnRELUhVay04NWc&single=true&gid=0&output=html';
+    var geo;
+    var NCSenateDistricts = {};
+    var app = {};
+
+    function clearInfobox() {
+        sidebar.html(' ');
+        sidebar.attr("class", "col-md-3")
+    }
+    $(document).ready( function() {
+        Tabletop.init( { key: public_spreadsheet_url,
+            callback: showInfo,
+            parseNumbers: true } );
+    });
+
+    function showInfo(data, tabletop) {
+        var source   = $("#senate-template").html();
+        var template = Handlebars.compile(source);
+        var sourcebox = $("#senate-template-infobox").html();
+        app.infoboxTemplate = Handlebars.compile(sourcebox);
+        $.each( tabletop.sheets("Sheet1").all(), function(i, member) {
+            var html = template(member);
+            $("#content").append(html);
+            NCSenateDistricts[member.district] = member;
+        });
+        loadGeo();
+//          processJSON(tabletop.sheets("Sheet1").all());
+    }
+
+    //Width and height
+    var w = 700;
+    var h = 300;
+
+    //Define map projection
+    var projection = d3.geo.mercator()
+            .translate([w/2, h/2])
+            .scale([4100])
+            .rotate( [79, 0])
+            .center([-1,35]);
+
+    //Define path generator
+    var path = d3.geo.path()
+            .projection(projection);
+
+    //Define scale for colors
+    //      var color = d3.scale.ordinal()
+    //      var color = d3.scale.quantize()
+    //              .range(["rgb(255,0,0)","rgb(186,228,179)","rgb(116,196,118)","rgb(49,163,84)","rgb(0,109,44)"]);
+    //          //Colors taken from colorbrewer.js, included in the D3 download
+    //          //Set input domain for color scale
+    ////              .domain([(0,100]);
+
+    //      var colorScale = d3.scale.quantize()
+    //              .domain([0, 100])
+    //              .range(d3.range(6).map(function(d) {
+    //                  // console.log("q", d);
+    //                  return "q" + d + "-6";
+    //              }));
+    var colorScale = d3.scale.threshold()
+            .domain([1, 25, 50, 75, 100])
+            .range(d3.range(6).map(function(d) {
+                // console.log("q", d);
+                return "q" + d + "-6";
+            }));
+
+    // Create SVG element
+    var mapdiv = d3.select("#map");
+    var freeze = 0;
+
+    var svg = mapdiv.append("svg")
+            .attr("width", w)
+            .attr("height", h);
+
+    var sidebar = d3.select('#sidebar');
+
+    function loadGeo() {
+        //Load in GeoJSON data
+        // this smaller file, was converted to geojson using mapshaper.org
+        // The source was without transforming the projection first, doesnt display anything.
+//          d3.json("maps/nc_sldu13_orig.json", function(json) {
+        //this makes a crazy, unusable map, but at least something is showing.
+        d3.json("maps/nc_sldu13_orig.json", function(json) {
+
+            json.features.forEach(function(feature) {
+//                  console.log("you are here",feature);
+                if (NCSenateDistricts[parseInt(feature.properties.SLDUST.substr(1, 2))]) {
+                    feature.properties = NCSenateDistricts[parseInt(feature.properties.SLDUST.substr(1, 2))]
+                } else {
+                    console.log("No match", feature.properties.SLDUST.substr(1, 2));
+                }
+            });
+
+            geo = json;
+            render()
+        })
+    }
+
+    function render() {
+        //Bind data and create one path per GeoJSON feature
+        svg.selectAll("path")
+                .data(geo.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+//                  .style("fill", function(d) {
+//                      var value = d.properties.score2013;
+//                      return value ? color(value) : '#ccc'
+//                  })
+                .attr("stroke", "white")
+                .attr("stroke-width", 1)
+                .attr("class", function(d) {
+                    return colorScale(d.properties.score2013)
+                })
+                .on('mouseover', function(d) {
+                    if (!freeze) {
+                        var dd = d.properties;
+                        sidebar.attr("class", "infobox col-md-3");
+                        var html = app.infoboxTemplate(dd);
+                        $("#sidebar").append(html);
+                    }
+                })
+
+                .on('mouseout', function(d) {
+                    if (!freeze) {
+                    clearInfobox();
+                    }
+                })
+
+                .on('click', function(d) {
+                    freeze = 1;
+                    sidebar.html(' ');
+                    sidebar.attr("class", "col-md-3");
+                    var dd = d.properties;
+                    sidebar.attr("class", "infobox col-md-3");
+                    var html = app.infoboxTemplate(dd);
+                    $("#sidebar").append(html);
+                })
+
+    }
+
+    $(document).on("click","button",function(event) {
+        event.preventDefault();
+        clearInfobox();
+        freeze=0;
+    });
+
+</script>
+</body>
+</html>
