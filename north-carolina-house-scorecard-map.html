@@ -7,17 +7,30 @@
     <link href="css/style.css" media="screen" rel="stylesheet" type="text/css" />
 </head>
 <body>
-<div class="container">
-    <div class="row">
-        <h1>North Carolina League of Conservation Voters  <br><small>State Senate Scorecard Map</small></h1>
+<div class="container" style="max-width:978px;">
+
+    <div class="row" style="margin-left: 200px;">
+      <div class='my-legend'>
+        <div class='legend-title'>Legend: 2013 NCLCV Score </div>
+        <div class='legend-scale'>
+          <ul class='legend-labels' style='text-align:center'>
+            <li><span style='background:#A09174'></span>0&ndash;19%</li>
+            <li><span style='background:#BFB29E'></span>20&ndash;39%</li>
+            <li><span style='background:#DCEAD6;'></span>40&ndash;59%</li>
+            <li><span style='background:#98C58D;'></span>60&ndash;79%</li>
+            <li><span style='background:#46A847;'></span>80&ndash;100%</li>
+          </ul>
+        </div>
+        <!--<div class='legend-source'>Source: <a href="#link to source">Name of source</a></div>-->
+      </div>
     </div>
-    <div class="row">
-        <div id="main" class="col-md-9">
+    <div class="row"  style="margin-left: 5px;">
+        <div id="main" class="col-sm-8">
             <div id="map"></div>
         </div>
-        <div id="sidebar" class="col-md-3"></div>
+        <div id="sidebar" class="col-sm-4"></div>
     </div>
-    <div class="row">
+    <div class="row" style="margin-left: 14px;">
         <div id="content"></div>
     </div>
 </div><!-- /container -->
@@ -41,15 +54,15 @@
 </script>
 
 <script id="senate-template-infobox" type="text/x-handlebars-template">
-    <div class="entry" style="padding-top:12px;">
+    <div class="entry-infobox" style="padding-top:12px;">
         <div class="body">
             <button type='button' id='close' class='close'>x</button><br>
 
             <strong>                {{{fullname}}} ({{{party}}})</strong><br>
             District {{{district}}}<br>
             {{#if phone}}{{{phone}}}<br>{{/if}}
-            Counties: <em>{{{countiesrepresented}}}</em><br>
-            Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
+          Counties: <em>{{{countiesrepresented}}}</em><br>
+          Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
             2013 Score: <strong>{{{score2013}}}</strong><br>
             {{{notes}}}<br>
             {{#if twitter}}<a  target='_new' href="http://twitter.com/{{{twitter}}}"><i class="icon-twitter icon-2x custom-icon"></i></a>{{/if}} {{#if facebook}} <a  target='_new' href="{{{facebook}}}"><i class="icon-facebook icon-2x custom-icon"></i></a> {{/if}}{{#if emailaddress}}<a  target='_new' href="mailto:{{{emailaddress}}}"><i class="icon-envelope icon-2x custom-icon"></i></a>{{/if}}
@@ -71,7 +84,7 @@
 
     function clearInfobox() {
         sidebar.html(' ');
-        sidebar.attr("class", "col-md-3")
+        sidebar.attr("class", "col-md-4")
     }
     $(document).ready( function() {
         Tabletop.init( { key: public_spreadsheet_url,
@@ -84,11 +97,11 @@
         var template = Handlebars.compile(source);
         var sourcebox = $("#senate-template-infobox").html();
         app.infoboxTemplate = Handlebars.compile(sourcebox);
-        $.each( tabletop.sheets("Sheet1").all(), function(i, member) {
+        $.each( tabletop.sheets("Addresses").all(), function(i, member) {
             var html = template(member);
             $("#content").append(html);
             NCSenateDistricts[member.district] = member;
-          console.log(NCSenateDistricts)
+//          console.log(NCSenateDistricts)
 
         });
         loadGeo();
@@ -104,7 +117,7 @@
             .translate([w/2, h/2])
             .scale([4100])
             .rotate( [79, 0])
-            .center([-1,35]);
+            .center([-.48,35]);
 
     //Define path generator
     var path = d3.geo.path()
@@ -125,10 +138,10 @@
     //                  return "q" + d + "-6";
     //              }));
     var colorScale = d3.scale.threshold()
-            .domain([1, 25, 50, 75, 100])
+            .domain([20, 40, 60, 80])
             .range(d3.range(6).map(function(d) {
                 // console.log("q", d);
-                return "q" + d + "-6";
+                return "q" + d + "-5";
             }));
 
     // Create SVG element
@@ -147,14 +160,14 @@
         // The source was without transforming the projection first, doesnt display anything.
 //          d3.json("maps/nc_sldu13_orig.json", function(json) {
         //this makes a crazy, unusable map, but at least something is showing.
-        d3.json("maps/nc_sldu13_orig.json", function(json) {
+        d3.json("maps/tl_rd13_37_sldl.json", function(json) {
 
             json.features.forEach(function(feature) {
 //                  console.log("you are here",feature);
-                if (NCSenateDistricts[parseInt(feature.properties.SLDUST.substr(1, 2))]) {
-                    feature.properties = NCSenateDistricts[parseInt(feature.properties.SLDUST.substr(1, 2))]
+                if (NCSenateDistricts[parseInt(feature.properties.SLDLST)]) {
+                    feature.properties = NCSenateDistricts[parseInt(feature.properties.SLDLST)]
                 } else {
-                    console.log("No match", feature.properties.SLDUST.substr(1, 2));
+                    console.log("No match", feature.properties.SLDLST);
                 }
             });
 
@@ -182,7 +195,7 @@
                 .on('mouseover', function(d) {
                     if (!freeze) {
                         var dd = d.properties;
-                        sidebar.attr("class", "infobox col-md-3");
+                        sidebar.attr("class", "infobox col-md-4");
                         var html = app.infoboxTemplate(dd);
                         $("#sidebar").append(html);
                     }
@@ -197,9 +210,9 @@
                 .on('click', function(d) {
                     freeze = 1;
                     sidebar.html(' ');
-                    sidebar.attr("class", "col-md-3");
+                    sidebar.attr("class", "col-md-4");
                     var dd = d.properties;
-                    sidebar.attr("class", "infobox col-md-3");
+                    sidebar.attr("class", "infobox col-md-4");
                     var html = app.infoboxTemplate(dd);
                     $("#sidebar").append(html);
                 })

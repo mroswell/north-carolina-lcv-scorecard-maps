@@ -8,8 +8,22 @@
 </head>
 <body>
 <div class="container">
+
     <div class="row">
-        <h1>North Carolina League of Conservation Voters  <br><small>State Senate Scorecard Map</small></h1>
+      <div class='my-legend'>
+        <div class='legend-title'>Legend: 2013 NCLCV Score </div>
+        <div class='legend-scale'>
+          <ul class='legend-labels' style='text-align:center'>
+            <li><span style='background:#D32;'></span>0%</li>
+            <li><span style='background:#E98736;'></span>1 - 24%</li>
+            <li><span style='background:#F1C76E;'></span>25 - 49%</li>
+            <li><span style='background:#FFB;'></span>50 - 74%</li>
+            <li><span style='background:#C0DC8F;'></span>75 - 99%</li>
+            <li><span style='background:#195;'></span>100%</li>
+          </ul>
+        </div>
+        <div class='legend-source'>Source: <a href="#link to source">Name of source</a></div>
+      </div>
     </div>
     <div class="row">
         <div id="main" class="col-md-9">
@@ -48,8 +62,8 @@
             <strong>                {{{fullname}}} ({{{party}}})</strong><br>
             District {{{district}}}<br>
             {{#if phone}}{{{phone}}}<br>{{/if}}
-            Counties: <em>{{{countiesrepresented}}}</em><br>
-            Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
+          Counties: <em>{{{countiesrepresented}}}</em><br>
+          Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
             2013 Score: <strong>{{{score2013}}}</strong><br>
             {{{notes}}}<br>
             {{#if twitter}}<a  target='_new' href="http://twitter.com/{{{twitter}}}"><i class="icon-twitter icon-2x custom-icon"></i></a>{{/if}} {{#if facebook}} <a  target='_new' href="{{{facebook}}}"><i class="icon-facebook icon-2x custom-icon"></i></a> {{/if}}{{#if emailaddress}}<a  target='_new' href="mailto:{{{emailaddress}}}"><i class="icon-envelope icon-2x custom-icon"></i></a>{{/if}}
@@ -84,11 +98,11 @@
         var template = Handlebars.compile(source);
         var sourcebox = $("#senate-template-infobox").html();
         app.infoboxTemplate = Handlebars.compile(sourcebox);
-        $.each( tabletop.sheets("Sheet1").all(), function(i, member) {
+        $.each( tabletop.sheets("Addresses").all(), function(i, member) {
             var html = template(member);
             $("#content").append(html);
             NCSenateDistricts[member.district] = member;
-          console.log(NCSenateDistricts)
+//          console.log(NCSenateDistricts)
 
         });
         loadGeo();
@@ -128,7 +142,7 @@
             .domain([1, 25, 50, 75, 100])
             .range(d3.range(6).map(function(d) {
                 // console.log("q", d);
-                return "q" + d + "-6";
+                return "q" + d + "-7";
             }));
 
     // Create SVG element
@@ -147,14 +161,14 @@
         // The source was without transforming the projection first, doesnt display anything.
 //          d3.json("maps/nc_sldu13_orig.json", function(json) {
         //this makes a crazy, unusable map, but at least something is showing.
-        d3.json("maps/nc_sldu13_orig.json", function(json) {
+        d3.json("maps/tl_rd13_37_sldl.json", function(json) {
 
             json.features.forEach(function(feature) {
 //                  console.log("you are here",feature);
-                if (NCSenateDistricts[parseInt(feature.properties.SLDUST.substr(1, 2))]) {
-                    feature.properties = NCSenateDistricts[parseInt(feature.properties.SLDUST.substr(1, 2))]
+                if (NCSenateDistricts[parseInt(feature.properties.SLDLST)]) {
+                    feature.properties = NCSenateDistricts[parseInt(feature.properties.SLDLST)]
                 } else {
-                    console.log("No match", feature.properties.SLDUST.substr(1, 2));
+                    console.log("No match", feature.properties.SLDLST);
                 }
             });
 
