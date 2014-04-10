@@ -5,7 +5,7 @@ body {
 
 .entry {
     float: left;
-    width: 210px;
+    width: 209px;
     border: solid black 1px;
     height: 220px;
     padding: 18px;
@@ -20,7 +20,7 @@ body {
     border: solid black 1px;
     height: 225px;
     padding: 25px;
-    margin: 25px 33px 25px 25px;
+    margin: 25px 10px 25px 25px;
     background: white;
     line-height: 1.1;
 }
