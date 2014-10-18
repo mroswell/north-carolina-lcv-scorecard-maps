@@ -11,7 +11,7 @@
 
     <div class="row" style="margin-left: 200px;">
       <div class='my-legend'>
-        <div class='legend-title'>Legend: 2013 NCLCV Score </div>
+        <div class='legend-title'>Legend: 2014 NCLCV Score </div>
         <div class='legend-scale'>
           <ul class='legend-labels' style='text-align:center'>
             <li><span style='background:#A09174'></span>0&ndash;19%</li>
@@ -46,7 +46,7 @@
             {{#if phone}}{{{phone}}}<br>{{/if}}
             Counties: <em>{{{countiesrepresented}}}</em><br>
             Lifetime Score: <strong>{{{lifetimescore}}}</strong><br>
-            2013 Score: <strong>{{{score2013}}}</strong><br>
+            2014 Score: <strong>{{{score2013}}}</strong><br>
             {{{notes}}}<br>
             {{#if twitter}}<a  target='_new' href="http://twitter.com/{{{twitter}}}"><i class="icon-twitter icon-2x custom-icon"></i></a>{{/if}} {{#if facebook}} <a  target='_new' href="{{{facebook}}}"><i class="icon-facebook icon-2x custom-icon"></i></a> {{/if}}{{#if emailaddress}}<a  target='_new' href="mailto:{{{emailaddress}}}"><i class="icon-envelope icon-2x custom-icon"></i></a>{{/if}}
         </div>
@@ -123,20 +123,7 @@
     var path = d3.geo.path()
             .projection(projection);
 
-    //Define scale for colors
-    //      var color = d3.scale.ordinal()
-    //      var color = d3.scale.quantize()
-    //              .range(["rgb(255,0,0)","rgb(186,228,179)","rgb(116,196,118)","rgb(49,163,84)","rgb(0,109,44)"]);
-    //          //Colors taken from colorbrewer.js, included in the D3 download
-    //          //Set input domain for color scale
-    ////              .domain([(0,100]);
 
-    //      var colorScale = d3.scale.quantize()
-    //              .domain([0, 100])
-    //              .range(d3.range(6).map(function(d) {
-    //                  // console.log("q", d);
-    //                  return "q" + d + "-6";
-    //              }));
     var colorScale = d3.scale.threshold()
             .domain([20, 40, 60, 80])
             .range(d3.range(6).map(function(d) {
@@ -156,10 +143,6 @@
 
     function loadGeo() {
         //Load in GeoJSON data
-        // this smaller file, was converted to geojson using mapshaper.org
-        // The source was without transforming the projection first, doesnt display anything.
-//          d3.json("maps/nc_sldu13_orig.json", function(json) {
-        //this makes a crazy, unusable map, but at least something is showing.
         d3.json("maps/tl_rd13_37_sldl.json", function(json) {
 
             json.features.forEach(function(feature) {
